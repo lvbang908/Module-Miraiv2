@@ -1,68 +1,27 @@
-/**
-* @author MeewMeew
-* @MeewMeew Do not edit code or edit credits
-*/
+module.exports.config = {
+  name: "\n",
+  version: "1.0.0",
+  hasPermssion: 0,
+  credits: "LVBang",
+  description: "Random ảnh loli khi sai lệnh",
+  commandCategory: "Hình ảnh",
+  usages: "noprefix",
+  cooldowns: 5
+};
 
-class MeewMeewModule {
-  get config() {
-    return {
-      name: "adduser",
-      version: "2.4.5",
-      hasPermssion: 0,
-      credits: "MeewMeew",
-      description: "Thêm người dùng vào nhóm bằng link hoặc id",
-      commandCategory: "group",
-      usages: "[args]",
-      cooldowns: 5,
-      envConfig: {
-        APIKEY: ""
-      },
-      dependencies: {
-        meewmeewapi: "latest"
-      },
-      meewmeewConfig: {
-        requiredApikey: true
-      }
-    }
-  }
-
-  async run({ api, event, args }) {
-    const MeewMeew = global.nodemodule["meewmeewapi"].default;
-    const { APIKEY } = global.configModule.adduser;
-    const facebook = new MeewMeew.Facebook(APIKEY);
-    const { threadID, messageID } = event;
-    const out = msg => api.sendMessage(msg, threadID, messageID);
-    var { participantIDs, adminIDs } = await api.getThreadInfo(threadID);
-    var participantIDs = participantIDs.map(e => parseInt(e));
-    if (!args[0]) return out("Vui lòng nhập 1 id/link profile user cần add.");
-    if (!isNaN(args[0])) return await this.adduser(args[0], undefined, adminIDs);
-    try {
-      var [id, name, fail] = await facebook.uid(args[0], api);
-      if (fail == true && id != null) return out(id);
-      else if (fail == true && id == null) return out("Không tìm thấy ID người dùng.")
-      else {
-        await this.adduser(id, name || "người dùng Facebook", adminIDs);
-      }
-    } catch (e) {
-      return out(`${e.name}: ${e.message}.`);
-    }
-  }
-
-  async adduser(id, name, adminIDs) {
-    id = parseInt(id);
-    if (participantIDs.includes(id)) return out(`${name ? name : "Thành viên"} đã có mặt trong nhóm.`);
-    else {
-      var admins = adminIDs.map(e => parseInt(e.id));
-      try {
-        await api.addUserToGroup(id, threadID);
-      }
-      catch {
-        return out(`Không thể thêm ${name ? name : "người dùng"} vào nhóm.`);
-      }
-      if (approvalMode === true && !admins.includes(botID)) return out(`Đã thêm ${name ? name : "thành viên"} vào danh sách phê duyệt !`);
-      else return out(`Đã thêm ${name ? name : "thành viên"} vào nhóm !`)
-    }
-  }
+module.exports.run = async function({ api, event }) {
+  const axios = require('axios');
+  const request = require('request');
+  const fs = require("fs");
+  axios.get('https://bao2711.up.railway.app/').then(res => {
+  let ext = res.data.data.substring(res.data.data.lastIndexOf(".") + 1);
+  let count = res.data.count;
+  let callback = function () {
+          api.sendMessage({
+            body: `Gói cước quý khách sử dụng hiện đã hết hạn. Vui lòng nạp thêm tiền vào: 41141212219999 MB BANK để gia hạn cước và tiếp tục sử dụng. Bot xin cảm ơn 💞`,
+            attachment: fs.createReadStream(__dirname + `/cache/sailenh.${ext}`)
+          }, event.threadID, () => fs.unlinkSync(__dirname + `/cache/sailenh.${ext}`), event.messageID);
+        };
+        request(res.data.data).pipe(fs.createWriteStream(__dirname + `/cache/sailenh.${ext}`)).on("close", callback);
+      })
 }
-
-module.exports = new MeewMeewModule();
